@@ -1,0 +1,34 @@
+---
+title: "武汉市疫情预测分析"
+author: "杨洁 王瑶 张莉 管晓倩"
+date: "2020/3/31"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+fontsize: 12pt
+geometry:
+  lmargin=2.5cm
+  rmargin=2.5cm
+documentclass: article
+---
+
+## 1研究背景
+
+2019年12月，湖北省武汉市出现不明原因的病毒性肺炎，该病毒随后被证实为是一种新型冠状病毒。国家卫生健康委员会将新型冠状病毒感染的肺炎统一称为“新型冠状病毒肺炎”(简称“新冠肺炎”，Novel coronavirus pneumonia, NCP)。
+2020年1月20日，世界卫生组织首次将该冠状病毒命名为“2019新型冠状病毒( 2019 novel coronavirus, 2019-nCOV) ”。
+2020年2月11日，世界卫生组织将新型冠状病毒感染的肺炎命名为“COVID-19"(Corona virus disease 2019)。与此同时，国际病毒分类委员会声明，将新型冠状病毒命名为“SARS-CoV-2”(Severe acute respiratorysyndrome coronavirus-2)。       此次疫情的爆发时期又恰逢春运，庞大的人员流动为疫情的进一步传播提供了条件，同时也对疫情趋势分析造成了一定的困难。该疫情已经对中国公众健康和国家经济产生了重大的影响。
+
+## 2数据来源
+
+  数据主要来源于以下三个网址，具体的数据获取可以手动录入，或者利用爬虫技术。
+ [世界卫生组织](https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports) 
+ [中国国家卫健委](http://www.nhc.gov.cn/yjb/pqt/new_list.shtml)
+ [湖北省卫健委](http://wjw.hubei.gov.cn/fbjd/tzgg/)
+
+
+## 3统计方法
+  拟采用SEIR或SIR模型进行预测分析。
+
+## 4挑战及解决方法
+  可能的挑战是模型理解不透彻，在使用软件编程时会遇到一些困难，以及在R Studio中编译成网页会存在一些困难。希望可以在大量阅读文献中深入理解模型，利用网上的资源和寻求老师同学们的帮助中学习代码,最终完成项目展示。
