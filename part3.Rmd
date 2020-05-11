@@ -1,0 +1,204 @@
+
+---
+title: " 3.武汉市初期潜伏患者数及再生数估计"
+author: " 报告人：杨洁 "
+date: "2020年05月15日"
+output:
+  xaringan::moon_reader:
+    css: [default, zh-CN.css]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+
+---
+
+
+##**主要内容**
+
+##**3.1研究背景**
+
+##**3.2模型搭建**
+
+##**3.3代码展示**
+
+##**3.4后续工作**
+
+
+---
+
+## **3.1研究背景**
+
+&emsp;&emsp; 在传染病学领域，建模评估和预测病毒的传播路径、速率等对于疫情的控制非常重要。在经典的传染病学模型中，R0值常被用来描述疫情的传染速率，可以反映传染病爆发的潜力和严重程度。                       
+
+&emsp;&emsp;R0指的是基本再生数,表示一个病例进入到易感人群中，在理想条件下可感染的二代病例个数。如果 R0 大于 1，那么这种传染病就可以传遍整个人群；而 R0 小于 1 的传染病，则趋于消失。
+
+&emsp;&emsp;在初期疫情的研究中，国内外专家都给出了关于新型冠状病毒的传染速率、峰值等评估结果。其中，英美研究团队的结果表明，新型冠状病毒的 R0 值为 3.8，而国内团队给出的数据是 6.47。
+---
+
+## **3.2模型搭建**
+
+&emsp;&emsp;思路参考：https://github.com/JacksonWuxs/19nCoV-SEIR-Estimation
+
+&emsp;&emsp;模型主要仿照SEIR传染病模型并按照2019-nCoV病毒的传播特性进行了修改。我们先划分出5个类别的人群，分别为可能感染该病的健康人员（Susceptible, S），潜伏期患者（Exposed,E），确诊患者（Infected,I），死者（Dead,D）和治愈患者（C）。接着，我们定义潜伏期患者导致感染的概率为α1，确诊患者导致的感染的概率为 α2，潜伏期患者被确诊的概率为β，确诊患者被治愈的概率为σ，确诊患者死亡的概率为γ 。我们通过下式的常微分方程组(1)定义五个人群间的转移方程来描述传染病传播情况。 
+
+$$\dfrac{dS}{dt}=-α1*E-α2*I+σ*I$$
+$$\dfrac{dE}{dt}=α1*E+α2*I-β*E$$
+$$\dfrac{dI}{dt}=β*E-σ*I-γ*I$$
+$$\dfrac{dC}{dt}=σ*I$$
+
+---
+
+
+模型的目的：估计R0和1月16日的潜伏期感染人数（为什么设定16日为初始呢？16日之前的数据残缺较多）
+
+数据来源：https://github.com/839Studio/Novel-Coronavirus-Updates；
+
+具体数据:1月17日到2月11日的累计确诊、治愈、死亡数据。
+
+数据选择原因：为什么不用封城之前的数据？答；因为23日之前的到10日左右能找到的只有6天数据，尝试过但效果不佳，所以决定加入封城之后的数据。为什么数据截止到2月11日？答：因为2月12日诊断方式发生了改变，数目激增。政策措施是怎么区分的？答：当然这段时间之内存在不同强度的措施，这里只是假设一样。
+
+模型假设：每期新增感染者=α1*潜伏者+α2*确诊患者，所以每一期新增的患者数都都与未感染人数无关。
+
+定义损失函数：由于难以观测到潜伏期患者数量，于是我们尽可能利用已知数据，则定义我们模型的损失函数为如下公式。最后，使用模拟退火算法估计模型（1）中的系数并最终选择模型损失最小的模型为本文的最终模型。
+
+$$Loss=\sum_{i=1}^{n}(I_{i}-\hat{I_{i}})^2+\sum_{i=1}^{n}(D_{i}-\hat{D_{i}})^2+\sum_{i=1}^{n}(C_{i}-\hat{C_{i}})^2$$
+---
+
+
+## **3.3代码展示及结果**
+
+
+```{python，echo=F}
+   
+   #定义损失函数loss
+    def _loss(self, obs, est):
+        assert len(obs) == len(est)
+        loss = ((np.log2(obs + 1) - np.log2(est + 1)) ** 2).sum()
+        self.lossing.append(loss)
+       return loss
+   
+    #dual_annealing退火优化方法参数说明，使得self._optimize最小，param参数的取值范围，args对应目标函数的可变参数
+    def fit(self, initS, initE, initI, initD, initC, Y):
+        self.lossing = []
+        args = (initS, initE, initI, initD, initC, Y['确诊', '死亡', '治愈'].toarray())
+        param = [(0, 1),] * 5
+        result = dual_annealing(self._optimize, param, args=args, seed=30, maxiter=10) ['x']
+        self.P = SEIDC_PARAM(*result)
+        
+```
+---
+
+```{python，echo=F}     
+    #R2是拟合优度，越接近于1越好
+    def score(self, initS, initE, initI, initD, initC, Y, plot=False):
+        est = self.predict(initS, initE, initI, initD, initC, len(Y))['I', 'D', 'C']
+        loss = self._loss(Y['确诊', '死亡', '治愈'].toarray(), est.toarray())
+        est.columns = ['确诊', '死亡', '治愈']
+        r1 = r2_score(Y['治愈'], est['治愈'])
+        r2 = r2_score(Y['死亡'], est['死亡'])
+        r3 = r2_score(Y['确诊'], est['确诊'])
+        if plot:
+            self.plot_predict(Y, est)
+            print(' - 平均潜伏期为：%.2f天' % (1.0 / self.P.beta))
+            print(' - 病毒再生基数：%.2f' % (self.P.alpha1 / self.P.beta + (self.P.alpha2 / self.P.sigma + self.P.alpha2 / self.P.gamma)/ 2))
+            print(' - 确诊R2：%.4f' % r3)
+            print(' - 死亡R2：%.4f' % r2)
+            print(' - 治愈R2：%.4f' % r1)
+            print(' - 模型R2：%.4f' % ((r1 + r2 + r3) / 3))
+            print(' - 模型总误差：%.4f' % loss)
+        return loss, (r1 + r2 + r3) / 3
+``` 
+---
+
+```{python，echo=F} 
+    def plot_predict(self, obs, est):
+        for label, color in zip(obs.keys(), ['red', 'black', 'green']):
+            plt.plot(obs[label], color=color,alpha=0.3,label=label)
+            plt.plot(est[label], color=color, alpha=0.6, label=label)
+            plt.legend()
+            plt.show()
+            
+    def predict(self, initS, initE, initI, initD,initC, T):
+        return self._forward(initS, initE, initI, initD, initC, self.P, T)
+ 
+```
+
+---
+
+```{python，echo=F}
+# 截止到1月16日的累计确诊45、治愈2、死亡人数15，0到1100是参考的，可以换成更大的试试
+def searchBestParam(seir):
+    min_loss, max_r2, best_param, likeli_potential = float('inf'),0.0,None, 0
+    for potential in range(0, 1100, 25):
+        seir.fit(900000, potential, 45,15,2,train)
+        loss, r2 = seir.score(9000000, potential,45,15,2, Y=train, plot=False)
+        if loss < min_loss and r2 > max_r2:
+            print('潜在患者：%.4f | R2：%.4f | 误差： %.6f' % (potential, r2, loss))
+            min_loss, max_r2, best_param, likeli_potential = loss, r2, seir.P, potential
+    seir.P = best_param
+    seir.score(9000000, likeli_potential, 45,15,2, Y=train, plot=True)
+    return seir, likeli_potential
+
+seir, potentials = searchBestParam(SEIDC())
+```
+
+    潜在患者：25.0000 | R2：0.7215 | 误差： 15.641650
+    潜在患者：50.0000 | R2：0.8146 | 误差： 14.532187
+    
+---
+
+
+ 
+ 确诊$R^2$：0.9572   
+
+![png](3.3.1.png)
+
+死亡$R^2$：0.4907
+
+![png](3.3.2.png)
+---
+
+治愈$R^2$：0.9960
+
+
+![png](3.3.3.png)
+
+
+
+&emsp;&emsp;模型估计的结果：
+
+&emsp;&emsp;（1）平均潜伏期为：1.51天
+
+&emsp;&emsp;（2）病毒再生基数：6.11
+
+&emsp;&emsp;（3）模型$R^2$：0.8146
+
+&emsp;&emsp;（4）模型总误差：14.5322 
+
+&emsp;&emsp;（5) 武汉市内初始潜伏期患者数：50人
+
+
+---
+
+
+## **3.3模型的局限与展望**
+
+&emsp;&emsp;1.α具体的值是模型基于已有数据拟合出来的,模型中感染率为常数；
+
+&emsp;&emsp;2.实际上，随着病毒感染的人越来越多，这导致易感人群逐渐减少，实际上R0是会在远期下降的。也就是说，每期新增感染人数应该是一个与易感人群规模、潜伏者和确诊患者的函数。而此模型中，由于在感染初期，武汉市的人口规模并不会成为病毒感染的显著限制之一，所以定义的新增感染人数与易感人群规模无关。
+
+&emsp;&emsp;3.可以把模型的新增患者数修改为一个动态的函数，许多研究已经包含此相关的内容可以进行借鉴。在疫情发展的初期、中期、后期和末期分别拟合模型估计分阶段R0。
+
+
+---
+## **3.4后续工作**
+
+&emsp;&emsp;使用在武汉以外的海外检测到的病例数来估计在封城之前在武汉可能发生的病例。现有背景如下：
+
+&emsp;&emsp; 1.武汉封闭时间:1月23日凌晨2点;
+
+&emsp;&emsp; 2.武汉的官方确诊病例在关闭前刚刚超过100例，然后这个官方数字在1月29日上升到2000例;
+
+---
