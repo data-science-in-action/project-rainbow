@@ -1,0 +1,100 @@
+---
+title: "武汉市新冠肺炎预测分析"
+author: "杨洁 管晓倩 王瑶 张莉"
+date: "2020/5/13"
+output: 
+  slidy_presentation: default
+  ioslides_presentation: default
+mathjax: local
+pagemargins: 2.5
+fontsize: 12
+---
+
+# **4.基本SEIR模型**
+
+&nbsp; 
+
+**4.1基本SEIR模型介绍**
+
+&nbsp; 
+
+**4.2 SEIR模型的实现**
+
+&nbsp; 
+
+**4.3 SEIR模型结果**
+
+&nbsp; 
+
+---
+
+## **4.1基本SEIR模型介绍**
+
+<center>![](图片/4.1.1.png)</center>
+
+<center>![](图片/4.1.2.png)</center>
+
+---
+
+## **4.2 SEIR模型的实现**
+
+<center>![](图片/4.2.1.png)</center>
+
+&emsp;&emsp;&emsp;&emsp;r1--潜伏期患者每日接触
+
+&emsp;&emsp;&emsp;&emsp;r2--感染者每日接触
+
+&emsp;&emsp;&emsp;&emsp;b1--接触潜伏期患者被感染概率
+
+&emsp;&emsp;&emsp;&emsp;b2--接触感染者被感染概率
+
+&emsp;&emsp;&emsp;&emsp;a---潜伏期患者出现症状的概率
+
+&emsp;&emsp;&emsp;&emsp;r---患者康复概率
+
+&emsp;&emsp;&emsp;&emsp;d---患者死亡概率
+
+---
+
+## **4.3 SEIR模型结果**
+
+<center>![](图片/4.3.1.png)</center>
+
+---
+
+&nbsp; 
+
+&emsp;&emsp;按照真实情况的数据估计r和d：
+<center>![](图片/4.3.2.png)</center>
+
+&nbsp; 
+
+<center>![](图片/4.3.3.png)</center>
+
+---
+
+&nbsp; 
+
+<center>![](图片/4.3.4.png)![](图片/4.3.5.png)</center>
+
+---
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&emsp;&emsp;现在的SEIR模型的建立只是一个基础的理想化的模型，虽然在过程中根据前后情况的不同分成了两部分来考虑，但由于可能存在的超级传播者、前期数据的不完全准确以及政策不断调整变化等原因，由模型得到的结果并不完全准确。
+
+&nbsp;
+
+&emsp;&emsp;我们希望通过考虑更多可能存在影响的因素，进一步加以调整和分析。
+
+---
+
+&nbsp;
+
+<center>![](图片/rainbown.jpg)<center>
+&nbsp;
+<font size=16><center>谢谢大家！<center></font>
